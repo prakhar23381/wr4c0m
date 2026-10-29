@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-import numpy as np
 import pandas as pd
 
 from app.config import settings
@@ -99,11 +98,11 @@ def decision_forecasts(
 
     Days with no publish before their cutoff are omitted.
     """
-    publishes = np.sort(forecasts["publish_time"].unique())
+    publishes = pd.DatetimeIndex(forecasts["publish_time"].unique()).sort_values()
     frames = []
     for delivery_date in delivery_dates:
         cutoff = pd.Timestamp(decision_cutoff(delivery_date, cutoff_time, tz)).tz_convert("UTC")
-        index = np.searchsorted(publishes, cutoff, side="right") - 1
+        index = int(publishes.searchsorted(cutoff, side="right")) - 1
         if index < 0:
             continue
         day_start, day_end = delivery_day_bounds(delivery_date, tz)
