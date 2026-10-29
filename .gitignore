@@ -4,6 +4,7 @@ CHALLENGE.md
 PROJECT_PLAN.md
 
 # Python
+*.egg-info/
 __pycache__/
 *.py[cod]
 .venv/
@@ -24,5 +25,3 @@ dist/
 .DS_Store
 .vscode/
 .idea/
-.vercel
-.env*
