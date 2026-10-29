@@ -1,0 +1,42 @@
+{
+  "built_at": "2026-10-29T13:31:20Z",
+  "source": "https://data.elexon.co.uk/bmrs/api/v1/datasets",
+  "decision_days": [
+    "2026-01-01",
+    "2026-01-31"
+  ],
+  "delivery_days": [
+    "2026-01-02",
+    "2026-02-01"
+  ],
+  "raw_records": {
+    "actuals": 1488,
+    "forecasts": 19272
+  },
+  "quality": {
+    "actuals": {
+      "rows": 1488,
+      "expected_rows": 1488,
+      "missing_start_times": [],
+      "min_mw": 1695.0,
+      "max_mw": 17805.0,
+      "negative_values": 0,
+      "implausibly_high_values": 0
+    },
+    "forecasts": {
+      "rows": 14287,
+      "publishes": 256,
+      "first_publish": "2025-12-31T02:30:00Z",
+      "last_publish": "2026-01-31T22:30:00Z",
+      "off_schedule_publishes": [
+        "2026-01-15T12:25:00Z"
+      ],
+      "max_gap_between_publishes_h": 4.0,
+      "target_hours_without_any_forecast": [],
+      "min_mw": 2292.0,
+      "max_mw": 21353.0,
+      "negative_values": 0,
+      "implausibly_high_values": 0
+    }
+  }
+}
