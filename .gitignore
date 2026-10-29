@@ -1,0 +1,26 @@
+# Challenge brief & internal planning: not for the public repo
+*.docx
+CHALLENGE.md
+PROJECT_PLAN.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+dist/
+
+# Env / tooling
+.env
+.env.*
+!.env.example
+.vercel/
+.DS_Store
+.vscode/
+.idea/
