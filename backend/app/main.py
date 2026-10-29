@@ -1,12 +1,21 @@
-from fastapi import FastAPI
+from collections.abc import Awaitable, Callable
+
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health
+from app.api import accuracy, decision, health, meta
+
+# The data is static per deployment; Vercel purges its CDN cache on every deploy.
+CACHE_CONTROL = "public, max-age=300, s-maxage=86400"
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Wind Forecast API",
+        description=(
+            "Day-ahead wind forecast visibility and accuracy for GB, January 2026 "
+            "(Elexon BMRS FUELHH actuals vs WINDFOR forecasts)."
+        ),
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -15,7 +24,23 @@ def create_app() -> FastAPI:
         allow_origins=["http://localhost:5173"],
         allow_methods=["GET"],
     )
-    app.include_router(health.router, prefix="/api")
+
+    @app.middleware("http")
+    async def cache_headers(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        response = await call_next(request)
+        if (
+            request.method == "GET"
+            and response.status_code == 200
+            and request.url.path.startswith("/api/")
+            and request.url.path != "/api/health"
+        ):
+            response.headers.setdefault("Cache-Control", CACHE_CONTROL)
+        return response
+
+    for router in (health.router, meta.router, decision.router, accuracy.router):
+        app.include_router(router, prefix="/api")
     return app
 
 
