@@ -1,59 +1,157 @@
 @import "tailwindcss";
 
-/* Colour tokens. Chart colours are validated for colour-blind separation and contrast in
-   both modes (dataviz palette checks); the chart code reads these same variables. */
+/* Design language: Apple-style neutrals and type (see the UI lab notes in the project plan).
+   Pages are built from full-bleed "chapters": black scenes for the key message, pale grey and
+   white fields for detail. Blue is reserved for actions, links and selection. Chart series keep
+   the dataviz palette, validated for colour-blind separation in light and dark. */
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --muted: #898781;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
-  --wash: #f0efec;
+  --page: #ffffff;
+  --chapter: #f5f5f7;
+  --card: #ffffff;
+  --card-on-chapter: #ffffff;
+  --card-on-page: #f5f5f7;
+  --popover: #ffffff;
+  --ink: #1d1d1f;
+  --ink-2: #6e6e73;
+  --muted: #86868b;
+  --grid: #e8e8ed;
+  --axis: #d2d2d7;
+  --border: #d2d2d7;
+  --wash: #e8e8ed;
+  --thumb: #ffffff;
+  --switch-off: #e3e3e8;
+  --accent: #0071e3;
+  --link: #0066cc;
+  --localnav: rgba(255, 255, 255, 0.78);
   --forecast: #2a78d6;
   --actual: #eb6834;
   --shortfall: #e34948;
-  --good: #006300;
-  --warning: #fab219;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --ink: #f0efec;
-    --ink-2: #c3c2b7;
-    --muted: #898781;
-    --grid: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255, 255, 255, 0.1);
-    --wash: #262624;
+    --page: #000000;
+    --chapter: #161617;
+    --card: #1d1d1f;
+    --card-on-chapter: #1d1d1f;
+    --card-on-page: #161617;
+    --popover: #2a2a2c;
+    --ink: #f5f5f7;
+    --ink-2: #a1a1a6;
+    --muted: #86868b;
+    --grid: #2c2c2e;
+    --axis: #424245;
+    --border: #424245;
+    --wash: #2c2c2e;
+    --thumb: #636366;
+    --switch-off: #39393d;
+    --link: #2997ff;
+    --localnav: rgba(22, 22, 23, 0.78);
     --forecast: #3987e5;
     --actual: #d95926;
     --shortfall: #e66767;
-    --good: #0ca30c;
   }
 }
 
+/* Chapters. A dark scene is black in both colour modes. */
+.chapter-light {
+  background: var(--chapter);
+  --card: var(--card-on-chapter);
+}
+.chapter-white {
+  background: var(--page);
+  --card: var(--card-on-page);
+}
+.scene-dark {
+  color-scheme: dark;
+  background: #000000;
+  color: #f5f5f7;
+  --card: #1d1d1f;
+  --popover: #2a2a2c;
+  --ink: #f5f5f7;
+  --ink-2: #a1a1a6;
+  --muted: #86868b;
+  --grid: #262628;
+  --axis: #424245;
+  --border: #333336;
+  --wash: #2a2a2c;
+  --thumb: #636366;
+  --switch-off: #39393d;
+  --link: #2997ff;
+  --forecast: #3987e5;
+  --actual: #d95926;
+  --shortfall: #e66767;
+}
+
 @theme inline {
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --color-page: var(--page);
-  --color-surface: var(--surface);
+  --color-chapter: var(--chapter);
+  --color-card: var(--card);
+  --color-popover: var(--popover);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-grid: var(--grid);
   --color-line: var(--border);
   --color-wash: var(--wash);
+  --color-thumb: var(--thumb);
+  --color-switch-off: var(--switch-off);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-localnav: var(--localnav);
   --color-forecast: var(--forecast);
   --color-actual: var(--actual);
   --color-shortfall: var(--shortfall);
-  --color-good: var(--good);
-  --color-warning: var(--warning);
+}
+
+/* Type scale: tight, semibold display tiers; 17px body. */
+@utility text-hero {
+  font-size: clamp(64px, 11vw, 112px);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@utility text-display {
+  font-size: clamp(34px, 5.4vw, 56px);
+  line-height: 1.07;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+@utility text-headline {
+  font-size: clamp(28px, 3.6vw, 40px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+@utility text-title {
+  font-size: 21px;
+  line-height: 1.19;
+  font-weight: 600;
+  letter-spacing: 0.011em;
+}
+@utility text-body {
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.022em;
+}
+@utility text-lead {
+  font-size: clamp(19px, 2vw, 21px);
+  line-height: 1.38;
+  letter-spacing: 0.011em;
+}
+@utility text-eyebrow {
+  font-size: 17px;
+  line-height: 1.24;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+@utility text-control {
+  font-size: 14px;
+  line-height: 1.29;
+  letter-spacing: -0.016em;
 }
 
 body {

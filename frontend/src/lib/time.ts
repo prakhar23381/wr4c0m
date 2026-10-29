@@ -43,3 +43,8 @@ export function addDays(isoDate: string, days: number): string {
 export const toHHMM = (time: string) => time.slice(0, 5)
 
 export const isHHMM = (value: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+
+const calendarLong = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+/** "Wednesday 28 January 2026" for a YYYY-MM-DD delivery date. */
+export const formatDateLong = (isoDate: string) => calendarLong.format(new Date(`${isoDate}T00:00:00Z`)).replace(',', '')

@@ -1,53 +1,51 @@
+import { useState } from 'react'
+
 import { useMeta } from '../api/hooks'
 import { isHHMM, toHHMM } from '../lib/time'
 import { useCutoff } from '../lib/useCutoff'
-import { InfoTip, inputClass } from './ui'
+import { fieldClass, InfoTip, SegmentedControl } from './ui'
 
+const CUSTOM = 'custom'
+
+/** Decision time on the day before: the auction gates as presets, or any custom time. */
 export function CutoffPicker() {
   const meta = useMeta()
   const [cutoff, setCutoff] = useCutoff()
+  const [customOpen, setCustomOpen] = useState(false)
   const presets = meta.data?.cutoff_presets ?? []
+  const isPreset = presets.some((p) => toHHMM(p.time) === cutoff)
+  const custom = customOpen || (presets.length > 0 && !isPreset)
+
+  const options = [
+    ...presets.map((p) => ({ value: toHHMM(p.time), label: `${p.label.split(' ')[0]} ${toHHMM(p.time)}`, title: p.note })),
+    { value: CUSTOM, label: 'Custom' },
+  ]
 
   return (
-    <div className="relative">
-      <div className="mb-1 flex items-center text-xs font-medium text-ink-2">
-        Decision time (day before)
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-control hidden items-center text-ink-2 md:inline-flex">
+        Decide at
         <InfoTip text="When you commit to the day-ahead purchase on the day before delivery. The app uses the latest wind forecast published at or before this time. Presets are the GB day-ahead auction gate closures; the EPEX time is approximate." />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="Auction presets" className="inline-flex rounded-lg border border-line p-0.5">
-          {presets.map((preset) => {
-            const time = toHHMM(preset.time)
-            const active = time === cutoff
-            return (
-              <button
-                key={preset.time}
-                type="button"
-                title={preset.note}
-                aria-pressed={active}
-                onClick={() => setCutoff(time)}
-                className={`rounded-md px-2.5 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-forecast ${
-                  active ? 'bg-forecast text-white' : 'text-ink-2 hover:bg-wash hover:text-ink'
-                }`}
-              >
-                {preset.label.split(' ')[0]} {time}
-              </button>
-            )
-          })}
-        </div>
-        <label className="inline-flex items-center gap-1.5 text-sm text-ink-2">
-          <span className="sr-only">Custom decision time</span>
-          or
-          <input
-            type="time"
-            value={cutoff}
-            step={600}
-            onChange={(event) => isHHMM(event.target.value) && setCutoff(event.target.value)}
-            className={inputClass}
-          />
-          <span className="text-xs text-muted">UK</span>
-        </label>
-      </div>
+      </span>
+      <SegmentedControl
+        label="Decision time on the day before"
+        options={options}
+        value={custom ? CUSTOM : cutoff}
+        onChange={(value) => {
+          setCustomOpen(value === CUSTOM)
+          if (value !== CUSTOM) setCutoff(value)
+        }}
+      />
+      {custom && (
+        <input
+          type="time"
+          aria-label="Custom decision time, UK"
+          value={cutoff}
+          step={600}
+          onChange={(event) => isHHMM(event.target.value) && setCutoff(event.target.value)}
+          className={fieldClass}
+        />
+      )}
     </div>
   )
 }

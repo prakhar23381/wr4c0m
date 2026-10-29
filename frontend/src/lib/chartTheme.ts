@@ -1,8 +1,11 @@
 import { useMemo, useSyncExternalStore } from 'react'
 
 import { formatAxisMW } from './format'
+import { TONE_CLASS, useTone } from './tone'
 
 export interface ChartTheme {
+  /** True on dark backgrounds (dark mode or a black scene): washes need more opacity. */
+  dark: boolean
   surface: string
   ink: string
   ink2: string
@@ -23,15 +26,22 @@ function subscribe(onChange: () => void) {
   return () => query.removeEventListener('change', onChange)
 }
 
-/** Chart colours, read from the CSS tokens so charts follow light/dark mode. */
+/** Chart colours for the chapter the chart sits in, read from the CSS tokens so they follow
+ *  light/dark mode and black scenes. */
 export function useChartTheme(): ChartTheme {
+  const tone = useTone()
   const dark = useSyncExternalStore(subscribe, () => window.matchMedia(DARK_QUERY).matches)
   return useMemo(() => {
     void dark // re-read the tokens whenever the colour scheme flips
-    const styles = getComputedStyle(document.documentElement)
+    // Resolve the tokens as they apply inside this chapter, via a throwaway element.
+    const probe = document.createElement('div')
+    probe.className = TONE_CLASS[tone]
+    document.body.appendChild(probe)
+    const styles = getComputedStyle(probe)
     const token = (name: string) => styles.getPropertyValue(`--${name}`).trim()
-    return {
-      surface: token('surface'),
+    const theme = {
+      dark: tone === 'dark' || dark,
+      surface: token('card'),
       ink: token('ink'),
       ink2: token('ink-2'),
       muted: token('muted'),
@@ -42,7 +52,9 @@ export function useChartTheme(): ChartTheme {
       actual: token('actual'),
       shortfall: token('shortfall'),
     }
-  }, [dark])
+    probe.remove()
+    return theme
+  }, [dark, tone])
 }
 
 /** Hex colour at an opacity, for washes such as the error band. */
@@ -52,13 +64,13 @@ export function withAlpha(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif'
+const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif'
 
 /** Shared chrome: recessive axes and grid, legend top-left, themed tooltip. */
 export function baseOption(t: ChartTheme) {
   return {
     animationDuration: 300,
-    textStyle: { fontFamily: FONT, color: t.muted },
+    textStyle: { fontFamily: FONT, color: t.muted, fontSize: 12 },
     grid: { left: 4, right: 12, top: 28, bottom: 4, containLabel: true },
     // Legends are HTML (components/ui Legend), so they wrap cleanly on narrow screens.
     legend: { show: false },
@@ -66,10 +78,10 @@ export function baseOption(t: ChartTheme) {
       trigger: 'axis',
       backgroundColor: t.surface,
       borderColor: t.border,
-      borderWidth: 1,
-      padding: [8, 10],
+      borderWidth: 0,
+      padding: [10, 12],
       textStyle: { color: t.ink, fontSize: 12, fontFamily: FONT },
-      extraCssText: 'border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);',
+      extraCssText: 'border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.16);',
       axisPointer: { type: 'line', lineStyle: { color: t.axis, width: 1 } },
     },
   }

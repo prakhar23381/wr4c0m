@@ -1,13 +1,14 @@
-import { Link } from 'react-router'
+import { Chapter, ChevronLink } from '../components/ui'
 
 export function NotFoundPage() {
   return (
-    <div className="py-16 text-center">
-      <h1 className="text-2xl font-semibold text-ink">Page not found</h1>
-      <p className="mt-2 text-ink-2">That address doesn't match a page in this app.</p>
-      <Link to="/" className="mt-4 inline-block text-forecast underline">
-        Go to the decision view
-      </Link>
-    </div>
+    <Chapter tone="dark" inner="sm:py-28">
+      <p className="text-eyebrow text-ink-2">404</p>
+      <h1 className="text-display mt-2 text-ink">Page not found.</h1>
+      <p className="text-lead mt-4 text-ink-2">That address doesn't match a page in this app.</p>
+      <div className="mt-6">
+        <ChevronLink to="/">Go to the decision view</ChevronLink>
+      </div>
+    </Chapter>
   )
 }

@@ -35,7 +35,7 @@ it('shows the forecast used at the cutoff and the day summary', async () => {
     </QueryClientProvider>,
   )
 
-  expect(await screen.findByText(/Wed,? 28 Jan 2026/)).toBeInTheDocument()
+  expect(await screen.findByText('Wednesday 28 January 2026')).toBeInTheDocument()
   expect(screen.getByText(/Tue,? 27 Jan, 09:30 GMT/)).toBeInTheDocument()
   expect(screen.getByText('22,000 MWh')).toBeInTheDocument()
   expect(screen.getByText('−2,500 MW')).toBeInTheDocument()

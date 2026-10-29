@@ -5,6 +5,7 @@ import { decision } from '../../test/fixtures'
 import { decisionChartOption, decisionSeries, SERIES_NAMES } from './decisionChart'
 
 const theme: ChartTheme = {
+  dark: false,
   surface: '#fcfcfb', ink: '#0b0b0b', ink2: '#52514e', muted: '#898781', grid: '#e1e0d9',
   axis: '#c3c2b7', border: '#000000', forecast: '#2a78d6', actual: '#eb6834', shortfall: '#e34948',
 }

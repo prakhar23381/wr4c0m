@@ -61,7 +61,7 @@ export function EChart({ option, label, height = 320, onClick }: Props) {
     instance.on('click', handler)
     instance.getZr().setCursorStyle('pointer')
     return () => {
-      instance.off('click', handler)
+      if (!instance.isDisposed()) instance.off('click', handler)
     }
   }, [onClick])
 

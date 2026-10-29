@@ -25,3 +25,6 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Design reference (third-party brand guide), kept out of the public repo
+APPLE DESIGN.md

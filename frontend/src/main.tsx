@@ -16,6 +16,8 @@ const queryClient = new QueryClient({
 const router = createBrowserRouter([
   {
     element: <Layout />,
+    // Shown while a lazily loaded page is fetched on a direct visit.
+    hydrateFallbackElement: <div className="min-h-dvh bg-black" />,
     children: [
       { path: '/', element: <DecisionPage /> },
       {

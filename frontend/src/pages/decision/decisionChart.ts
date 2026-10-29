@@ -67,6 +67,9 @@ export interface DecisionChartOptions {
   vintages: Vintage[] | null
 }
 
+/** The likely-range wash: a light tint on light backgrounds needs more weight on black. */
+const bandAlpha = (t: ChartTheme) => (t.dark ? 0.3 : 0.16)
+
 export const SERIES_NAMES = {
   forecast: 'Forecast at decision time',
   band: 'Likely range (P10–P90)',
@@ -102,7 +105,7 @@ export function decisionChartOption(
         stack: 'band',
         data: width,
         lineStyle: { opacity: 0 },
-        areaStyle: { color: withAlpha(t.forecast, 0.16) },
+        areaStyle: { color: withAlpha(t.forecast, bandAlpha(t)) },
       },
       { ...line(t.forecast, 1.5), name: SERIES_NAMES.p50, data: s.p50, lineStyle: { color: t.forecast, width: 1.5, type: [4, 4], opacity: 0.8 } },
     )
@@ -139,7 +142,7 @@ export function decisionChartOption(
     if (hourly) {
       rows.push(tooltipRow(t.forecast, 'Forecast', formatMW(s.forecast[i])))
       if (show.band) {
-        rows.push(tooltipRow(withAlpha(t.forecast, 0.35), 'Likely range', `${formatMW(s.p10[i])} – ${formatMW(s.p90[i])}`.replace(' MW –', ' –')))
+        rows.push(tooltipRow(withAlpha(t.forecast, bandAlpha(t) + 0.2), 'Likely range', `${formatMW(s.p10[i])} – ${formatMW(s.p90[i])}`.replace(' MW –', ' –')))
         rows.push(tooltipRow(t.forecast, 'Typical (P50)', formatMW(s.p50[i])))
       }
     }
@@ -170,7 +173,7 @@ export function decisionLegend(t: ChartTheme, show: Omit<DecisionChartOptions, '
     ...(show.actuals ? [{ label: SERIES_NAMES.actual, color: t.actual, shape: 'line' as const }] : []),
     ...(show.band
       ? [
-          { label: SERIES_NAMES.band, color: withAlpha(t.forecast, 0.3), shape: 'area' as const },
+          { label: SERIES_NAMES.band, color: withAlpha(t.forecast, bandAlpha(t) + 0.15), shape: 'area' as const },
           { label: SERIES_NAMES.p50, color: t.forecast, shape: 'dashed' as const },
         ]
       : []),
