@@ -1,8 +1,30 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "wind-forecast-backend"
 version = "0.1.0"
 description = "API for day-ahead wind forecast visibility and accuracy (Elexon FUELHH / WINDFOR)"
 requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.162.0",
+    "uvicorn[standard]==0.54.0",
+    "pydantic-settings==2.16.2",
+    "pandas==3.1.0",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.2.0",
+    "ruff==0.17.3",
+    "mypy==2.4.1",
+    "pandas-stubs==3.0.5.260914",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.ruff]
 line-length = 100
