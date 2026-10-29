@@ -5,8 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import accuracy, decision, health, meta
 
-# The data is static per deployment; Vercel purges its CDN cache on every deploy.
-CACHE_CONTROL = "public, max-age=300, s-maxage=86400"
+# The data is static per deployment and Vercel purges its CDN cache on every deploy, so the
+# CDN can keep responses for a year; browsers re-check after 5 minutes.
+CACHE_CONTROL = "public, max-age=300, s-maxage=31536000"
 
 
 def create_app() -> FastAPI:
