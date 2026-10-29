@@ -152,6 +152,23 @@ This downloads FUELHH and WINDFOR for the in-scope window from the Elexon BMRS A
 **Likely range.** Forecast errors grow with the wind level, so the band on the decision view is the forecast plus the P10/P50/P90 of past errors for forecasts at a similar level (4 GW buckets). It is computed **leaving out the day on screen**, so it isn't fitted to the outcome it's shown against. It still comes from the same month, so treat it as illustrative.
 
 **Architecture.**
+
+```mermaid
+flowchart LR
+    elexon["Elexon BMRS API<br/>FUELHH · WINDFOR"]
+    subgraph backend["Backend · FastAPI"]
+        ingest["ingestion/<br/>fetch → clean → check"]
+        data[("data/<br/>snapshot")]
+        services["services/<br/>selection · metrics · bands"]
+        api["api/<br/>REST + OpenAPI docs"]
+    end
+    subgraph frontend["Frontend · React"]
+        spa["pages + charts<br/>TanStack Query · ECharts"]
+    end
+    elexon -- "build_snapshot (offline)" --> ingest --> data --> services --> api
+    api -- "JSON over /api/*" --> spa
+```
+
 - A FastAPI backend computes everything from the snapshot. Results are cached in memory and at the CDN, since the data only changes on deploy.
 - A React single-page app renders it with ECharts.
 - On Vercel, the frontend is served as static files and the backend runs as a Python function behind `/api`.
