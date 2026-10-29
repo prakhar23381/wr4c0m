@@ -2,180 +2,123 @@ import type { ReactNode } from 'react'
 
 import { useMeta } from '../api/hooks'
 import { Chapter } from '../components/ui'
-import { formatDate, formatDayTime, toHHMM } from '../lib/time'
+import { formatDateShort, formatDayTime, toHHMM } from '../lib/time'
 
 const REPO_URL = 'https://github.com/prakhar23381/wr4c0m'
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/** One spec-sheet section: short terms on the left, one-line answers on the right. */
+function Sheet({ title, rows }: { title: string; rows: [string, ReactNode][] }) {
   return (
-    <section className="rounded-[18px] bg-card p-6 sm:p-9">
-      <h2 className="text-[24px] leading-[1.17] font-semibold tracking-[0.009em] text-ink">{title}</h2>
-      <div className="text-body mt-4 space-y-3 text-ink-2 [&_b]:font-semibold [&_b]:text-ink [&_code]:text-[15px] [&_li]:ml-5 [&_li]:list-disc [&_li]:pl-1 [&_ul]:space-y-2">
-        {children}
-      </div>
+    <section className="grid gap-x-10 gap-y-4 border-t border-line py-8 first:border-0 first:pt-0 md:grid-cols-[200px_1fr]">
+      <h2 className="text-title text-ink">{title}</h2>
+      <dl className="text-body divide-y divide-line">
+        {rows.map(([term, answer]) => (
+          <div key={term} className="grid gap-x-6 gap-y-0.5 py-3 first:pt-0 sm:grid-cols-[150px_1fr]">
+            <dt className="font-semibold text-ink">{term}</dt>
+            <dd className="text-ink-2">{answer}</dd>
+          </div>
+        ))}
+      </dl>
     </section>
   )
 }
 
+const link = 'text-link hover:underline'
+
 export function MethodologyPage() {
   const meta = useMeta().data
+  const presets = meta?.cutoff_presets ?? []
 
   return (
     <>
       <Chapter tone="dark" inner="sm:py-24">
         <p className="text-eyebrow text-ink-2">Methodology</p>
-        <h1 className="text-display mt-2 max-w-[760px] text-ink">How the numbers are made.</h1>
-        <p className="text-lead mt-5 max-w-[680px] text-ink-2">
-          Where the data comes from, which forecast counts as the one you could have used, how accuracy is measured and what
-          the numbers can't tell you.
-        </p>
+        <h1 className="text-display mt-2 text-ink">How the numbers are made.</h1>
       </Chapter>
 
-      <Chapter tone="light">
-        <div className="mx-auto max-w-[820px] space-y-4">
-        <Section title="The question">
-          <p>
-            A utility buys power for tomorrow (delivery day <b>D</b>) on the day-ahead market, which closes on the day before
-            (<b>D−1</b>). Whatever wind generation it expects but doesn't get has to be bought later, usually at a worse price.
-            So the useful questions are: <b>what did the wind forecast say when the purchase had to be made</b>, and{' '}
-            <b>how much should that forecast be trusted</b>?
-          </p>
-        </Section>
-
-        <Section title="Data">
-          <ul>
-            <li>
-              <b>Actual wind</b>: Elexon BMRS <code>FUELHH</code>, fuel type <code>WIND</code>. Half-hourly metered output of
-              transmission-connected wind farms, in MW.
-            </li>
-            <li>
-              <b>Forecast wind</b>: Elexon BMRS <code>WINDFOR</code>. Hourly values, published about eight times a day. Each
-              publish covers a fixed window from 21:00 UTC the previous evening to 21:00 UTC two days later, so a forecast for
-              day D is available from early on D−2.
-            </li>
-            <li>
-              <b>Scope</b>: only purchase decisions made in January 2026
-              {meta && (
-                <>
-                  {' '}
-                  ({formatDate(meta.decision_first_day)} to {formatDate(meta.decision_last_day)}), i.e. delivery days{' '}
-                  {formatDate(meta.delivery_first_day)} to {formatDate(meta.delivery_last_day)}
-                </>
-              )}
-              . No other datasets are used.
-            </li>
-            <li>
-              The data is downloaded once into a versioned snapshot shipped with the app
-              {meta && <> (built {formatDayTime(meta.data_built_at)}, {meta.forecast_publishes} forecast publishes)</>}. Quality
-              checks for gaps, duplicates, late publishes and implausible values run when it is built.
-              {meta && meta.late_publishes.length > 0 && (
-                <>
-                  {' '}
-                  One forecast was published late ({meta.late_publishes.map((p) => formatDayTime(p)).join(', ')}); it counts
-                  only from when it actually appeared.
-                </>
-              )}
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="The decision time">
-          <p>
-            For each delivery day D, the app uses the <b>latest forecast published at or before the decision time on D−1</b>,
-            never one published after it. This avoids look-ahead bias: it shows exactly what a trader could have known.
-          </p>
-          <ul>
-            {(meta?.cutoff_presets ?? []).map((preset) => (
-              <li key={preset.time}>
-                <b>
-                  {preset.label}, {toHHMM(preset.time)}
-                </b>
-                : {preset.note}.
-              </li>
-            ))}
-            <li>Any other time can be entered to see how the answer changes with the decision time.</li>
-          </ul>
-          <p>
-            At the default 09:50 cutoff in January (GMT), that is the 09:30 publish, which looks 14.5 to 37.5 hours ahead across
-            the delivery day.
-          </p>
-        </Section>
-
-        <Section title="Matching forecast to actual">
-          <p>
-            The forecast is hourly and actuals are half-hourly. Each forecast hour is compared with the actual half-hour starting
-            on the hour. Averaging both half-hours instead changes the January average miss by under 1% (1,996 vs 2,013 MW), so
-            the simpler rule is used.
-          </p>
-        </Section>
-
-        <Section title="Metrics">
-          <ul>
-            <li>
-              <b>Error</b> = actual − forecast. <b>Negative means less wind than forecast</b> (a shortfall).
-            </li>
-            <li>
-              <b>Average miss (MAE)</b>: mean of |error|. <b>RMSE</b>: square root of the mean squared error, which weights big
-              misses more.
-            </li>
-            <li>
-              <b>Bias</b>: mean error. It shows a systematic lean, which an average miss alone hides.
-            </li>
-            <li>
-              <b>WAPE</b>: Σ|error| ÷ Σ actual. MAPE is avoided because it explodes in near-calm hours.
-            </li>
-            <li>
-              <b>P10 / P50 / P90</b>: percentiles of hourly errors. <b>Shortfall buffer</b> = −P10: in 9 hours out of 10 the
-              shortfall was no bigger than this.
-            </li>
-            <li>
-              <b>Accuracy by lead time</b> uses every forecast publish (not only the one at the decision time), to show how
-              accuracy changes with horizon.
-            </li>
-          </ul>
-        </Section>
-
-        <Section title="The likely range on the decision view">
-          <p>
-            Forecast errors grow with the wind level, so one fixed band would be too wide on calm days and too narrow on windy
-            ones. For each forecast hour, the band is the forecast plus the <b>P10, P50 and P90 of past errors for forecasts at a
-            similar level</b> (4 GW buckets; buckets with fewer than 30 hours fall back to all hours), floored at 0 MW.
-          </p>
-          <p>
-            The errors come from the <b>other delivery days</b> in the window: the day on screen is left out, so the band is not
-            fitted to the outcome it is shown against. It is still drawn from the same month, so treat it as an illustration of
-            how a production band would work, not a validated forecast.
-          </p>
-        </Section>
-
-        <Section title="Limitations">
-          <ul>
-            <li>One winter month is a small sample. Seasonal patterns and rare events are not covered.</li>
-            <li>
-              The forecast is systematically too high, most of all above ~16 GW, where actual output plateaus around 15–17 GW.{' '}
-              <b>Curtailment</b> (wind farms paid to turn down when the grid is constrained) is a likely cause, but confirming it
-              needs balancing data outside this app's scope.
-            </li>
-            <li>Wind on the distribution network (embedded wind) is not in FUELHH, so it is not assessed here.</li>
-            <li>There is no price or demand data, so errors are in MW and MWh, not £.</li>
-            <li>The EPEX gate time is approximate; the N2EX time is the published gate closure.</li>
-          </ul>
-        </Section>
-
-        <Section title="Source and API">
-          <p>
-            Code:{' '}
-            <a href={REPO_URL} className="text-link hover:underline">
-              {REPO_URL.replace('https://', '')}
-            </a>
-            . Every number here comes from a documented REST API:{' '}
-            <a href="/api/docs" className="text-link hover:underline">
-              interactive API docs
-            </a>
-            .
-          </p>
-        </Section>
-        </div>
+      <Chapter tone="white">
+        <Sheet
+          title="The question"
+          rows={[
+            ['Decision', 'Buy tomorrow’s power on the day-ahead market, which closes the day before.'],
+            ['Risk', 'Forecast wind that doesn’t come must be bought later, usually at a worse price.'],
+            ['So', 'What did the forecast say at decision time, and how far can it be trusted?'],
+          ]}
+        />
+        <Sheet
+          title="Data"
+          rows={[
+            ['Actual wind', 'Elexon FUELHH, fuel type WIND. Metered, half-hourly, MW.'],
+            ['Forecast', 'Elexon WINDFOR. Hourly, published about 8 times a day.'],
+            [
+              'Scope',
+              meta
+                ? `Decisions made in January 2026 (delivery ${formatDateShort(meta.delivery_first_day)} – ${formatDateShort(meta.delivery_last_day)}). No other data.`
+                : 'Decisions made in January 2026. No other data.',
+            ],
+            [
+              'Snapshot',
+              meta
+                ? `Built ${formatDayTime(meta.data_built_at)}, ${meta.forecast_publishes} forecast publishes, quality-checked. Late publishes count from when they appeared.`
+                : 'Downloaded once and quality-checked.',
+            ],
+          ]}
+        />
+        <Sheet
+          title="Decision time"
+          rows={[
+            ['Rule', 'The latest forecast published at or before the decision time on D−1. No look-ahead.'],
+            ...presets.map((p): [string, ReactNode] => [`${p.label.split(' ')[0]} ${toHHMM(p.time)}`, `${p.note}.`]),
+            ['Default', '09:50 uses the 09:30 forecast, 14.5–37.5 h ahead.'],
+          ]}
+        />
+        <Sheet
+          title="Metrics"
+          rows={[
+            ['Error', 'Actual − forecast. Negative means less wind than forecast.'],
+            ['Average miss', 'MAE: the average size of the error.'],
+            ['RMSE', 'Like MAE, but large misses count more.'],
+            ['Bias', 'The average error: a systematic lean.'],
+            ['WAPE', 'Σ|error| ÷ Σ actual. Avoids MAPE’s blow-up in calm hours.'],
+            ['Buffer', '−P10 of errors: covers the shortfall 9 hours in 10.'],
+            ['Matching', 'Each forecast hour vs the half-hour starting on the hour. Averaging both changes MAE by under 1%.'],
+            ['Hours ahead', 'Uses every forecast, not only decision-time ones.'],
+          ]}
+        />
+        <Sheet
+          title="Likely range"
+          rows={[
+            ['Band', 'Forecast + P10 / P50 / P90 of past errors at a similar level (4 GW buckets), floored at 0.'],
+            ['Fair test', 'The day on screen is left out of its own band.'],
+            ['Caveat', 'Built from the same month: illustrative, not validated.'],
+          ]}
+        />
+        <Sheet
+          title="Limitations"
+          rows={[
+            ['Sample', 'One winter month.'],
+            ['Over-forecast', 'Largest above ~16 GW. Curtailment is likely, but unconfirmed in scope.'],
+            ['Coverage', 'No embedded (distribution-connected) wind.'],
+            ['Money', 'No prices or demand: errors are in MW, not £.'],
+          ]}
+        />
+        <Sheet
+          title="Source"
+          rows={[
+            [
+              'Code',
+              <a key="code" href={REPO_URL} className={link}>
+                {REPO_URL.replace('https://', '')}
+              </a>,
+            ],
+            [
+              'API',
+              <a key="api" href="/api/docs" className={link}>
+                Interactive API docs
+              </a>,
+            ],
+          ]}
+        />
       </Chapter>
     </>
   )

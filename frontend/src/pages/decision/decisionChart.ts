@@ -71,11 +71,11 @@ export interface DecisionChartOptions {
 const bandAlpha = (t: ChartTheme) => (t.dark ? 0.3 : 0.16)
 
 export const SERIES_NAMES = {
-  forecast: 'Forecast at decision time',
-  band: 'Likely range (P10–P90)',
-  p50: 'Typical outcome (P50)',
+  forecast: 'Forecast',
+  band: 'Likely range',
+  p50: 'Typical',
   vintages: 'Earlier forecasts',
-  actual: 'Actual wind',
+  actual: 'Actual',
 }
 
 export function decisionChartOption(
@@ -169,14 +169,21 @@ export function decisionChartOption(
 
 export function decisionLegend(t: ChartTheme, show: Omit<DecisionChartOptions, 'vintages'> & { vintages: boolean }): LegendItem[] {
   return [
-    { label: SERIES_NAMES.forecast, color: t.forecast, shape: 'line' as const },
-    ...(show.actuals ? [{ label: SERIES_NAMES.actual, color: t.actual, shape: 'line' as const }] : []),
+    { label: SERIES_NAMES.forecast, color: t.forecast, shape: 'line' as const, tip: 'Latest forecast published by the decision time.' },
+    ...(show.actuals ? [{ label: SERIES_NAMES.actual, color: t.actual, shape: 'line' as const, tip: 'Metered wind output, half-hourly.' }] : []),
     ...(show.band
       ? [
-          { label: SERIES_NAMES.band, color: withAlpha(t.forecast, bandAlpha(t) + 0.15), shape: 'area' as const },
-          { label: SERIES_NAMES.p50, color: t.forecast, shape: 'dashed' as const },
+          {
+            label: SERIES_NAMES.band,
+            color: withAlpha(t.forecast, bandAlpha(t) + 0.15),
+            shape: 'area' as const,
+            tip: 'Where actual wind landed 8 hours in 10, for similar forecasts on other days.',
+          },
+          { label: SERIES_NAMES.p50, color: t.forecast, shape: 'dashed' as const, tip: 'The forecast corrected by its usual error at this wind level.' },
         ]
       : []),
-    ...(show.vintages ? [{ label: SERIES_NAMES.vintages, color: t.muted, shape: 'line' as const }] : []),
+    ...(show.vintages
+      ? [{ label: SERIES_NAMES.vintages, color: t.muted, shape: 'line' as const, tip: 'Older forecasts for this day, published before the decision time.' }]
+      : []),
   ]
 }

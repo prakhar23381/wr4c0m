@@ -1,4 +1,5 @@
-import { type CSSProperties, type ReactNode, useId } from 'react'
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router'
 
 import { ApiError } from '../api/client'
@@ -44,12 +45,14 @@ export function Heading({
   eyebrow,
   title,
   sub,
+  info,
   level = 2,
   className = '',
 }: {
   eyebrow?: ReactNode
   title: ReactNode
   sub?: ReactNode
+  info?: string
   level?: 1 | 2
   className?: string
 }) {
@@ -57,7 +60,10 @@ export function Heading({
   return (
     <div className={`relative mb-8 max-w-[760px] sm:mb-10 ${className}`}>
       {eyebrow && <p className="text-eyebrow mb-2 text-ink-2">{eyebrow}</p>}
-      <Tag className={level === 1 ? 'text-display text-ink' : 'text-headline text-ink'}>{title}</Tag>
+      <Tag className={level === 1 ? 'text-display text-ink' : 'text-headline text-ink'}>
+        {title}
+        {info && <InfoTip text={info} />}
+      </Tag>
       {sub && <p className="text-lead mt-3 text-ink-2">{sub}</p>}
     </div>
   )
@@ -81,7 +87,7 @@ export function Card({
       {(title || actions) && (
         <header className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
           <div className="min-w-0">
-            {title && <h3 className="text-title text-ink">{title}</h3>}
+            {title && <h3 className="text-title flex items-center text-ink">{title}</h3>}
             {subtitle && <p className="text-control mt-1 text-ink-2">{subtitle}</p>}
           </div>
           {actions && <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{actions}</div>}
@@ -92,28 +98,86 @@ export function Card({
   )
 }
 
-/** "i" button whose explanation shows on hover or keyboard focus. The bubble spans the nearest
- *  `relative` ancestor (a card, tile or heading), so it never runs off-screen. */
-export function InfoTip({ text }: { text: string }) {
+/** A short explanation in a small bubble beside its trigger: the "i" button, or `children`
+ *  shown as dotted-underlined text. Opens on hover, focus or tap. The bubble is rendered in a
+ *  portal with fixed positioning, so scroll containers can't clip it, and is kept on screen. */
+export function InfoTip({ text, children }: { text: string; children?: ReactNode }) {
   const id = useId()
+  const trigger = useRef<HTMLButtonElement>(null)
+  const bubble = useRef<HTMLSpanElement>(null)
+  const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
+  const show = () => setOpen(true)
+  const hide = useCallback(() => {
+    setOpen(false)
+    setPosition(null)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!open || !trigger.current || !bubble.current) return
+    const t = trigger.current.getBoundingClientRect()
+    const b = bubble.current.getBoundingClientRect()
+    const margin = 12
+    const left = Math.min(Math.max(t.left + t.width / 2 - b.width / 2, margin), window.innerWidth - b.width - margin)
+    const below = t.bottom + 8
+    const top = below + b.height > window.innerHeight - margin ? t.top - b.height - 8 : below
+    setPosition({ top, left })
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const outside = (event: PointerEvent) => {
+      if (!trigger.current?.contains(event.target as Node)) hide()
+    }
+    const escape = (event: KeyboardEvent) => event.key === 'Escape' && hide()
+    window.addEventListener('scroll', hide, true)
+    window.addEventListener('resize', hide)
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', escape)
+    return () => {
+      window.removeEventListener('scroll', hide, true)
+      window.removeEventListener('resize', hide)
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [open, hide])
+
   return (
-    <span className="group inline-flex align-middle">
+    <>
       <button
+        ref={trigger}
         type="button"
         aria-describedby={id}
-        aria-label="Explain"
-        className={`ml-1.5 inline-flex size-[18px] cursor-help items-center justify-center rounded-full bg-wash text-[11px] leading-none font-semibold text-ink-2 hover:text-ink ${focusRing}`}
+        aria-label={children ? undefined : 'More info'}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        onClick={show}
+        className={
+          children
+            ? `cursor-help text-inherit underline decoration-current/40 decoration-dotted decoration-1 underline-offset-[3px] ${focusRing}`
+            : `ml-1.5 inline-flex size-[17px] shrink-0 cursor-help items-center justify-center rounded-full bg-wash align-middle text-[10px] leading-none font-semibold text-ink-2 hover:text-ink ${focusRing}`
+        }
       >
-        i
+        {children ?? 'i'}
       </button>
-      <span
-        role="tooltip"
-        id={id}
-        className="text-control pointer-events-none invisible absolute inset-x-2 top-full z-30 mt-2 rounded-xl bg-popover p-3.5 font-normal text-ink-2 opacity-0 shadow-[0_8px_28px_rgba(0,0,0,0.16)] transition-opacity group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100"
-      >
+      <span id={id} className="sr-only">
         {text}
       </span>
-    </span>
+      {open &&
+        createPortal(
+          <span
+            ref={bubble}
+            role="tooltip"
+            style={{ position: 'fixed', top: position?.top ?? -9999, left: position?.left ?? -9999 }}
+            className="pointer-events-none z-50 w-max max-w-[240px] rounded-xl bg-popover px-3 py-2 text-[13px] leading-[1.35] font-normal tracking-[-0.01em] text-ink shadow-[0_8px_28px_rgba(0,0,0,0.18)]"
+          >
+            {text}
+          </span>,
+          document.body,
+        )}
+    </>
   )
 }
 
@@ -322,7 +386,7 @@ export function Legend({ items }: { items: LegendItem[] }) {
       {items.map((item) => (
         <li key={item.label} className="inline-flex items-center gap-1.5">
           <span aria-hidden className="inline-block shrink-0" style={KEY_STYLES[item.shape](item.color)} />
-          {item.label}
+          {item.tip ? <InfoTip text={item.tip}>{item.label}</InfoTip> : item.label}
         </li>
       ))}
     </ul>

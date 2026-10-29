@@ -14,12 +14,12 @@ import { formatAxisMW, formatMW, formatPct, formatSignedMW } from '../../lib/for
 import { formatDateShort, toHHMM } from '../../lib/time'
 
 // Series identity on this page: average miss (MAE) is blue, bias (actual − forecast) is red.
-export const MAE = 'Average miss (MAE)'
-export const BIAS = 'Bias (actual − forecast)'
+export const MAE = 'Average miss'
+export const BIAS = 'Bias'
 
 export const maeBiasLegend = (t: ChartTheme, shapes: [LegendItem['shape'], LegendItem['shape']]): LegendItem[] => [
-  { label: MAE, color: t.forecast, shape: shapes[0] },
-  { label: BIAS, color: t.shortfall, shape: shapes[1] },
+  { label: MAE, color: t.forecast, shape: shapes[0], tip: 'Average size of the hourly error (MAE).' },
+  { label: BIAS, color: t.shortfall, shape: shapes[1], tip: 'Average of actual minus forecast. Below zero: too high.' },
 ]
 
 type Params = { dataIndex: number }[]
@@ -185,11 +185,11 @@ export function leadTimeOption(rows: BreakdownRow[], width: number, t: ChartThem
   }
 }
 
-export const BUFFER = 'Shortfall buffer (−P10)'
+export const BUFFER = 'Shortfall buffer'
 
 export const sweepLegend = (t: ChartTheme): LegendItem[] => [
-  { label: MAE, color: t.forecast, shape: 'line' },
-  { label: BUFFER, color: t.shortfall, shape: 'line' },
+  { label: MAE, color: t.forecast, shape: 'line', tip: 'Average size of the hourly error (MAE).' },
+  { label: BUFFER, color: t.shortfall, shape: 'line', tip: 'Cover needed for 9 hours in 10 (minus the P10 error).' },
 ]
 
 /** Accuracy if the decision were made at other times on D-1, with the auction gates marked. */

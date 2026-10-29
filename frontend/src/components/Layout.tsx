@@ -1,7 +1,5 @@
 import { NavLink, Outlet, useSearchParams } from 'react-router'
 
-import { useMeta } from '../api/hooks'
-import { formatDate } from '../lib/time'
 
 const PAGES = [
   { to: '/', label: 'Decision view', short: 'Decision' },
@@ -11,7 +9,6 @@ const PAGES = [
 
 export function Layout() {
   const [params] = useSearchParams()
-  const meta = useMeta()
   // Keep the chosen decision time when moving between pages.
   const cutoff = params.get('cutoff')
   const search = cutoff ? `?cutoff=${encodeURIComponent(cutoff)}` : ''
@@ -49,15 +46,9 @@ export function Layout() {
       </main>
 
       <footer className="chapter-light border-t border-line">
-        <div className="mx-auto max-w-[1080px] space-y-1.5 px-4 py-6 text-[12px] leading-[1.33] text-ink-2 sm:px-6">
-          <p>
-            Data: Elexon BMRS, FUELHH (wind outturn) and WINDFOR (wind forecast)
-            {meta.data &&
-              `, for purchase decisions from ${formatDate(meta.data.decision_first_day)} to ${formatDate(meta.data.decision_last_day)}`}
-            .
-          </p>
-          <p>All times are UK time. Forecast errors are actual minus forecast; negative means less wind than forecast.</p>
-        </div>
+        <p className="mx-auto max-w-[1080px] px-4 py-5 text-[12px] leading-[1.33] text-ink-2 sm:px-6">
+          Elexon BMRS · FUELHH &amp; WINDFOR · Decisions in January 2026 · UK time
+        </p>
       </footer>
     </div>
   )

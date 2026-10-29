@@ -9,7 +9,7 @@ import { type ChartOption, EChart } from '../components/EChart'
 import { Card, Chapter, ErrorState, Heading, InfoTip, Legend, LocalNav, Skeleton, StatTile } from '../components/ui'
 import { type ChartTheme, type LegendItem, useChartTheme } from '../lib/chartTheme'
 import { formatGW, formatMW, formatPct, formatSignedMW } from '../lib/format'
-import { formatDate, toHHMM } from '../lib/time'
+import { formatDate, formatDateShort, toHHMM } from '../lib/time'
 import { useCutoff } from '../lib/useCutoff'
 import {
   cutoffSweepOption,
@@ -51,7 +51,7 @@ export function AccuracyPage() {
       <Chapter tone="light">
         <Heading
           title="Windy days are over-forecast the most."
-          sub="Error by forecast wind level. Above about 16 GW of forecast wind, actual output fell several gigawatts short."
+          info="Above ~16 GW forecast, actual output falls GWs short. Curtailment is a likely cause."
         />
         <LevelChart cutoff={cutoff} />
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -61,12 +61,12 @@ export function AccuracyPage() {
       </Chapter>
 
       <Chapter tone="white">
-        <Heading title="Day by day." sub="Most days were over-forecast. Click a day to open it in the decision view." />
+        <Heading title="Day by day." info="Bars: average miss. Dots: bias. Click a day to open it." />
         <DailyChart cutoff={cutoff} />
       </Chapter>
 
       <Chapter tone="light">
-        <Heading title="When the error happens." sub="By hour of day, and by how far ahead the forecast was made." />
+        <Heading title="When the error happens." />
         <div className="grid gap-4 lg:grid-cols-2">
           <HourChart cutoff={cutoff} />
           <LeadTimeChart cutoff={cutoff} />
@@ -80,56 +80,38 @@ export function AccuracyPage() {
 
 function Headline({ summary, cutoff }: { summary: AccuracySummary; cutoff: string }) {
   const m = summary.metrics
-  const share = (100 * m.shortfall_buffer_mw) / m.mean_forecast_mw
   const numbers = [
+    { label: 'Average miss', value: formatMW(m.mae_mw), tip: 'Average size of the hourly error, ignoring direction (MAE).' },
+    { label: 'Bias', value: formatSignedMW(m.bias_mw), tip: 'Average of actual minus forecast. Negative: forecast too high.' },
+    { label: 'WAPE', value: formatPct(m.wape_pct), tip: 'Total error as a share of total wind output.' },
     {
-      label: 'Average miss',
-      value: formatMW(m.mae_mw),
-      detail: `MAE over ${m.count} hours`,
-      info: 'Mean absolute error: on average, how far each hourly forecast was from what happened, ignoring direction.',
-    },
-    {
-      label: 'Bias',
-      value: formatSignedMW(m.bias_mw),
-      detail: m.bias_mw < 0 ? 'Forecast ran too high' : 'Forecast ran too low',
-      info: 'Mean of actual − forecast. Negative means the forecast was systematically too high, so you would tend to be short of wind and buy the gap later at a higher price.',
-    },
-    {
-      label: 'Error as % of output',
-      value: formatPct(m.wape_pct),
-      detail: 'WAPE',
-      info: "Total absolute error divided by total actual wind (weighted absolute percentage error). Unlike MAPE, it doesn't explode in near-calm hours.",
-    },
-    {
-      label: 'Forecast vs actual',
+      label: 'Forecast → actual, GW',
       value: `${formatGW(m.mean_forecast_mw).replace(' GW', '')} → ${formatGW(m.mean_actual_mw).replace(' GW', '')}`,
-      detail: 'GW, average hourly wind',
+      tip: 'Average hourly wind: forecast versus metered.',
     },
   ]
   return (
     <>
-      <div className="relative max-w-[820px]">
-        <p className="text-eyebrow flex items-center text-ink-2">
-          Shortfall buffer
-          <InfoTip text="Minus the 10th percentile of hourly errors (actual − forecast). In 9 hours out of 10, actual wind was no more than this far below the forecast, so holding this much cover protects you in all but the worst 10% of hours." />
-        </p>
-        <h1 className="text-hero mt-3 text-ink">{formatGW(m.shortfall_buffer_mw)}</h1>
-        <p className="text-lead mt-6 text-ink-2">
-          To cover a wind shortfall in <span className="font-semibold text-ink">9 hours out of 10</span>, plan for up to{' '}
-          <span className="font-semibold text-ink">{formatMW(m.shortfall_buffer_mw)}</span> less wind than forecast,{' '}
-          {formatPct(share)} of the average forecast. Based on {summary.days} delivery days ({formatDate(summary.date_from)} to{' '}
-          {formatDate(summary.date_to)}), deciding at {toHHMM(cutoff)} the day before.
-        </p>
-      </div>
-      <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-line pt-8 lg:grid-cols-4">
+      <p className="text-eyebrow flex items-center text-ink-2">
+        Shortfall buffer
+        <InfoTip text="Minus the P10 error: covers the shortfall 9 hours in 10." />
+      </p>
+      <h1 className="text-hero mt-3 text-ink">{formatGW(m.shortfall_buffer_mw)}</h1>
+      <p className="text-lead mt-5 text-ink-2">
+        Plan for <span className="font-semibold text-ink">{formatMW(m.shortfall_buffer_mw)}</span> less wind than forecast, 9
+        hours in 10.
+      </p>
+      <p className="text-control mt-2 text-muted">
+        {summary.days} days · {formatDateShort(summary.date_from)} – {formatDateShort(summary.date_to)} · decided at {toHHMM(cutoff)}
+      </p>
+      <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-5 lg:grid-cols-4">
         {numbers.map((n) => (
-          <div key={n.label} className="relative lg:border-l lg:border-line lg:pl-6 lg:first:border-0 lg:first:pl-0">
+          <div key={n.label} className="border-t border-line pt-4">
             <dt className="text-control flex items-center text-ink-2">
               {n.label}
-              {n.info && <InfoTip text={n.info} />}
+              <InfoTip text={n.tip} />
             </dt>
             <dd className="mt-1.5 text-[28px] leading-[1.14] font-semibold tracking-[-0.01em] text-ink sm:text-[32px]">{n.value}</dd>
-            <dd className="text-control mt-1 text-ink-2">{n.detail}</dd>
           </div>
         ))}
       </dl>
@@ -144,20 +126,18 @@ function SecondaryTiles({ summary }: { summary: AccuracySummary }) {
       <StatTile
         label="RMSE"
         value={formatMW(m.rmse_mw)}
-        detail="Weights big misses more"
-        info="Root mean square error. Higher than MAE when there are occasional large misses, which are the ones that cost the most."
+        info="Like the average miss, but large misses count more."
       />
       <StatTile
-        label="Typical error range"
+        label="P10 to P90 error"
         value={`${formatGW(m.p10_mw).replace(' GW', '')} to ${m.p90_mw > 0 ? '+' : ''}${formatGW(m.p90_mw)}`}
-        detail="P10 to P90 of hourly errors"
-        info="8 hours in 10 had an error (actual − forecast) inside this range. It is lopsided: shortfalls are much larger than surpluses."
+        info="8 hours in 10 fell inside this range. Shortfalls dominate."
       />
       <StatTile
         label="Worst hour"
         value={formatSignedMW(-m.max_shortfall_mw)}
-        detail={`Best surprise ${formatSignedMW(m.max_surplus_mw)}`}
-        info="The largest single-hour shortfall (actual below forecast) in the period, and the largest surplus."
+        detail={`Best ${formatSignedMW(m.max_surplus_mw)}`}
+        info="Largest single-hour shortfall, and largest surplus, in the period."
       />
     </div>
   )
@@ -167,7 +147,6 @@ function SecondaryTiles({ summary }: { summary: AccuracySummary }) {
 function ChartBlock<T>({
   query,
   title,
-  subtitle,
   info,
   label,
   build,
@@ -179,7 +158,6 @@ function ChartBlock<T>({
 }: {
   query: UseQueryResult<T>
   title?: string
-  subtitle?: string
   info?: string
   label: string
   build: (data: T, theme: ChartTheme) => ChartOption
@@ -208,11 +186,10 @@ function ChartBlock<T>({
   if (bare) return body
   return (
     <Card
-      title={title}
-      subtitle={
-        subtitle && (
+      title={
+        title && (
           <>
-            {subtitle}
+            {title}
             {info && <InfoTip text={info} />}
           </>
         )
@@ -232,9 +209,6 @@ function LevelChart({ cutoff }: { cutoff: string }) {
   return (
     <ChartBlock
       query={useBreakdown('level', cutoff)}
-      title="Error by forecast level"
-      subtitle="Average miss and bias for each 4 GW band of forecast wind."
-      info="A likely cause is curtailment: when the grid can't take all the wind, wind farms are paid to turn down, while the forecast predicts what they could generate. This is a hypothesis; the data in scope can't confirm it."
       label="Bar chart of average miss and bias by forecast level; bias grows more negative as the forecast level rises."
       build={buildLevel}
       legend={(t) => maeBiasLegend(t, ['bar', 'bar'])}
@@ -247,9 +221,8 @@ function DistributionChart({ cutoff }: { cutoff: string }) {
   return (
     <ChartBlock
       query={useDistribution(cutoff)}
-      title="Errors lean towards shortfall"
-      subtitle="Hours by size of error (actual − forecast)."
-      info="Each bar counts hours whose error fell in that 500 MW band. Left of zero, actual wind was below the forecast. P10, P50 and P90 mark the 10th, 50th and 90th percentiles."
+      title="Errors lean to shortfall"
+      info="Hours per 500 MW band of error. Left of zero: less wind than forecast."
       label="Histogram of hourly forecast errors, centred well below zero."
       build={distributionOption}
       height={330}
@@ -271,8 +244,6 @@ function DailyChart({ cutoff }: { cutoff: string }) {
   return (
     <ChartBlock
       query={query}
-      title="Accuracy by delivery day"
-      subtitle="Average miss (bars) and bias (dots) for each day."
       label="Bar chart of average miss per delivery day, with bias dots; most days show negative bias."
       build={buildDaily}
       legend={(t) => maeBiasLegend(t, ['bar', 'dot'])}
@@ -287,14 +258,16 @@ function WorstDays({ data, cutoff }: { data: BreakdownResponse; cutoff: string }
   const worst = [...data.rows].sort((a, b) => b.mae_mw - a.mae_mw).slice(0, 5)
   return (
     <div className="mt-8 overflow-x-auto">
-      <h4 className="text-eyebrow mb-2 text-ink">Five worst days</h4>
+      <h3 className="text-eyebrow mb-2 text-ink">Five worst days</h3>
       <table className="text-control w-full text-right tabular-nums">
         <thead className="text-ink-2">
           <tr className="border-b border-line">
-            <th className="py-2.5 pr-3 text-left font-semibold">Delivery day</th>
+            <th className="py-2.5 pr-3 text-left font-semibold">Day</th>
             <th className="px-3 font-semibold">Average miss</th>
             <th className="px-3 font-semibold">Bias</th>
-            <th className="pl-3 font-semibold">Worst 10% of hours beyond</th>
+            <th className="pl-3 font-semibold">
+              <InfoTip text="The worst 10% of hours fell short by more than this.">P10 error</InfoTip>
+            </th>
           </tr>
         </thead>
         <tbody className="text-ink">
@@ -321,7 +294,7 @@ function HourChart({ cutoff }: { cutoff: string }) {
     <ChartBlock
       query={useBreakdown('hour', cutoff)}
       title="By hour of day"
-      subtitle="Error for each delivery hour (UK time)."
+      info="Delivery hour, UK time."
       label="Line chart of average miss and bias by hour of day; both vary modestly."
       build={buildHour}
       legend={(t) => maeBiasLegend(t, ['line', 'line'])}
@@ -334,8 +307,7 @@ function LeadTimeChart({ cutoff }: { cutoff: string }) {
     <ChartBlock
       query={useBreakdown('lead_time', cutoff)}
       title="By hours ahead"
-      subtitle="Closer to delivery is better, but the bias stays."
-      info="Uses all forecast publishes, not only the one available at the decision time, so it shows how accuracy changes with horizon. The miss shrinks closer to delivery, but the negative bias is there at every horizon, so it is structural rather than a weather-forecasting limit."
+      info="Every forecast, not just decision-time ones. Bias persists at every horizon."
       label="Line chart of average miss and bias by forecast lead time; the miss rises with lead time and bias is negative throughout."
       build={buildLead}
       legend={(t) => maeBiasLegend(t, ['line', 'line'])}
@@ -358,11 +330,11 @@ function CutoffSweep() {
   return (
     <Chapter tone="dark">
       <Heading
-        title="Would a later forecast help?"
-        sub={
+        title="The better forecast arrives too late."
+        info={
           best
-            ? `The most accurate morning forecast arrives from ${toHHMM(best.cutoff)}, after both auction gates have closed. It can't inform the purchase, which is why the buffer matters.`
-            : 'Accuracy if the decision were made at other times on the day before.'
+            ? `Deciding from ${toHHMM(best.cutoff)} would be more accurate, but both auctions have closed.`
+            : 'Accuracy if deciding at other times the day before.'
         }
       />
       <ChartBlock
@@ -373,10 +345,6 @@ function CutoffSweep() {
         legend={sweepLegend}
         height={360}
       />
-      <p className="text-control mt-4 text-ink-2">
-        For each decision time, the whole month is re-run using the latest forecast published by then. Forecasts arrive every 2–3
-        hours, so the lines step when a new one lands.
-      </p>
     </Chapter>
   )
 }

@@ -178,27 +178,43 @@ function Hero({
   const late = meta.late_publishes.includes(publish)
   return (
     <Chapter tone="dark" inner="sm:pt-16">
-      <div className="relative max-w-[820px]">
-        <p className="text-eyebrow text-ink-2">Delivery day</p>
-        <h1 className="text-display mt-2 text-ink">{formatDateLong(decision.delivery_date)}</h1>
-        <p className="text-lead mt-5 text-ink-2">
-          Deciding at <span className="font-semibold text-ink">{formatDayTime(decision.cutoff)} {zoneAbbr(decision.cutoff)}</span>, the
-          latest wind forecast was published at{' '}
-          <span className="font-semibold text-ink">{formatDayTime(publish)} {zoneAbbr(publish)}</span>
-          {decision.forecast_age_h !== null && <>, {formatHours(decision.forecast_age_h)} earlier</>}. It looks{' '}
-          {formatHours(Math.min(...leads))} to {formatHours(Math.max(...leads))} ahead.
-        </p>
-        {late && <p className="text-control mt-3 text-ink-2">⚠ This forecast was published later than its scheduled slot.</p>}
-        {decision.missing_hours.length > 0 && (
-          <p className="text-control mt-3 text-ink-2">
-            ⚠ The forecast has no value for {decision.missing_hours.length} hour(s):{' '}
-            {decision.missing_hours.map((h) => formatClock(h)).join(', ')}.
-          </p>
-        )}
-        <JumpLinks cutoff={cutoff} onJump={onJump} />
-      </div>
+      <p className="text-eyebrow text-ink-2">Delivery day</p>
+      <h1 className="text-display mt-2 text-ink">{formatDateLong(decision.delivery_date)}</h1>
+      <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-3">
+        <Fact label="Decided" tip="When the day-ahead purchase is committed, the day before delivery." value={`${formatDayTime(decision.cutoff)} ${zoneAbbr(decision.cutoff)}`} />
+        <Fact
+          label="Forecast used"
+          tip="The newest forecast published at or before the decision time."
+          value={`${formatDayTime(publish)} ${zoneAbbr(publish)}`}
+          detail={
+            [decision.forecast_age_h !== null && `${formatHours(decision.forecast_age_h)} old`, late && '⚠ published late']
+              .filter(Boolean)
+              .join(' · ') || undefined
+          }
+        />
+        <Fact
+          label="Looks ahead"
+          tip="Hours from the forecast's publish time to each delivery hour."
+          value={`${formatHours(Math.min(...leads)).replace(' h', '')}–${formatHours(Math.max(...leads))}`}
+          detail={decision.missing_hours.length > 0 ? `⚠ ${decision.missing_hours.length} hour(s) missing` : undefined}
+        />
+      </dl>
+      <JumpLinks cutoff={cutoff} onJump={onJump} />
       <ForecastChart decision={decision} hindsight={hindsight} setHindsight={setHindsight} />
     </Chapter>
+  )
+}
+
+function Fact({ label, tip, value, detail }: { label: string; tip: string; value: string; detail?: string }) {
+  return (
+    <div className="border-t border-line pt-4">
+      <dt className="text-control flex items-center text-ink-2">
+        {label}
+        <InfoTip text={tip} />
+      </dt>
+      <dd className="text-title mt-1.5 text-ink">{value}</dd>
+      {detail && <dd className="text-control mt-1 text-ink-2">{detail}</dd>}
+    </div>
   )
 }
 
@@ -211,7 +227,7 @@ function JumpLinks({ cutoff, onJump }: { cutoff: string; onJump: (date: string) 
   const best = String(sorted[0].key)
   const worst = String(sorted[sorted.length - 1].key)
   return (
-    <div className="mt-5 flex flex-wrap gap-x-7 gap-y-2">
+    <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2">
       <ChevronLink onClick={() => onJump(worst)}>Worst day · {formatDateShort(worst)}</ChevronLink>
       <ChevronLink onClick={() => onJump(best)}>Best day · {formatDateShort(best)}</ChevronLink>
     </div>
@@ -242,16 +258,11 @@ function ForecastChart({
     [decision, theme, hindsight, band, showVintages, vintages.data],
   )
   return (
-    <div className="relative mt-12 sm:mt-14">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-line pt-6">
-        <div className="relative">
-          <p className="text-title flex items-center text-ink">
-            Forecast at decision time vs outcome
-            <InfoTip text={`Shaded: where actual wind landed 8 hours in 10 for similar forecasts. ${decision.band_basis}. The dashed line (P50) is the typical outcome: the forecast corrected by its usual error at that wind level.`} />
-          </p>
-        </div>
+    <div className="mt-14 sm:mt-16">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+        <p className="text-title text-ink">Forecast vs outcome</p>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
-          <Switch checked={hindsight} onChange={setHindsight}>Show what actually happened</Switch>
+          <Switch checked={hindsight} onChange={setHindsight}>Outcome</Switch>
           <Switch checked={band} onChange={setBand}>Likely range</Switch>
           <Switch checked={showVintages} onChange={setShowVintages}>Earlier forecasts</Switch>
         </div>
@@ -274,27 +285,24 @@ function Numbers({ decision, hindsight }: { decision: DecisionResponse; hindsigh
   const hours = decision.hours.length
   return (
     <Chapter tone="light">
-      <Heading
-        title="The day in numbers."
-        sub="What the forecast promised, a cautious low case to plan against and, in hindsight, what actually happened."
-      />
+      <Heading title="The day in numbers." />
       <div className="grid gap-4 sm:grid-cols-3">
         <StatTile
           label="Forecast wind energy"
           value={formatMWh(s.forecast_energy_mwh)}
-          detail={`Average ${formatMW(s.forecast_energy_mwh / hours)} over ${hours} hours`}
-          info="Total wind generation the forecast expected for the delivery day: the sum of its hourly values."
+          detail={`Avg ${formatGW(s.forecast_energy_mwh / hours)}`}
+          info="Sum of the hourly forecast for the delivery day."
         />
         <StatTile
           label="Low case (P10)"
           value={formatMWh(s.p10_energy_mwh)}
-          detail={`${formatPct((100 * s.p10_energy_mwh) / s.forecast_energy_mwh)} of the forecast`}
-          info="A cautious planning figure. On other January days with similar forecasts, actual wind fell below this hourly level only 1 hour in 10. Buying cover against this, not the headline forecast, protects against a wind shortfall."
+          detail={`${formatPct((100 * s.p10_energy_mwh) / s.forecast_energy_mwh)} of forecast`}
+          info="On similar days, wind fell below this only 1 hour in 10."
         />
         <StatTile
           label="Forecast range"
           value={`${formatGW(s.forecast_min_mw)} – ${formatGW(s.forecast_max_mw)}`}
-          detail="Lowest and highest forecast hour"
+          info="Lowest and highest forecast hour."
         />
       </div>
       {hindsight && s.actual_energy_mwh !== null && (
@@ -304,20 +312,19 @@ function Numbers({ decision, hindsight }: { decision: DecisionResponse; hindsigh
             <StatTile
               label="Actual wind energy"
               value={formatMWh(s.actual_energy_mwh)}
-              detail={`${formatPct((100 * s.actual_energy_mwh) / s.forecast_energy_mwh)} of the forecast`}
-              info="Metered wind generation on the delivery day (Elexon FUELHH, transmission-connected wind farms)."
+              detail={`${formatPct((100 * s.actual_energy_mwh) / s.forecast_energy_mwh)} of forecast`}
+              info="Metered wind output on the delivery day."
             />
             <StatTile
-              label="Average miss (MAE)"
+              label="Average miss"
               value={formatMW(s.mae_mw)}
-              detail="Mean absolute hourly error"
-              info="On average, how far each hourly forecast was from what happened, ignoring direction."
+              info="Average size of the hourly error, ignoring direction (MAE)."
             />
             <StatTile
               label="Bias"
               value={formatSignedMW(s.bias_mw)}
               detail={s.bias_mw !== null && s.bias_mw < 0 ? 'Less wind than forecast' : 'More wind than forecast'}
-              info="Average of actual minus forecast. Negative means the forecast was too high: you would have been short of wind and had to buy the gap at a higher price."
+              info="Average of actual minus forecast. Negative means you were short of wind."
             />
           </div>
         </>
@@ -346,7 +353,7 @@ function HourlyTable({ decision, hindsight }: { decision: DecisionResponse; hind
   return (
     <Chapter tone="white">
       <div className="flex flex-wrap items-end justify-between gap-x-6">
-        <Heading title="Hour by hour." sub="Every forecast hour with its likely range and, in hindsight, the outcome." />
+        <Heading title="Hour by hour." />
         <button type="button" className={`mb-8 sm:mb-10 ${pillClass}`} onClick={exportCsv}>
           Download CSV
         </button>
@@ -362,13 +369,17 @@ function HourlyTable({ decision, hindsight }: { decision: DecisionResponse; hind
               <thead className="text-ink-2">
                 <tr className="border-b border-line">
                   <th className="py-2.5 pr-3 text-left font-semibold">Hour ({zone})</th>
-                  <th className="px-3 font-semibold">Ahead</th>
+                  <th className="px-3 font-semibold"><InfoTip text="Hours between the forecast's publish time and this hour.">Ahead</InfoTip></th>
                   <th className="px-3 font-semibold">Forecast</th>
-                  <th className="px-3 font-semibold">Low (P10)</th>
-                  <th className="px-3 font-semibold">Typical (P50)</th>
-                  <th className="px-3 font-semibold">High (P90)</th>
+                  <th className="px-3 font-semibold"><InfoTip text="P10: wind fell below this 1 hour in 10 on similar days.">Low</InfoTip></th>
+                  <th className="px-3 font-semibold"><InfoTip text="P50: the forecast plus its usual error at this level.">Typical</InfoTip></th>
+                  <th className="px-3 font-semibold"><InfoTip text="P90: wind beat this only 1 hour in 10 on similar days.">High</InfoTip></th>
                   {hindsight && <th className="px-3 font-semibold">Actual</th>}
-                  {hindsight && <th className="pl-3 font-semibold">Error</th>}
+                  {hindsight && (
+                    <th className="pl-3 font-semibold">
+                      <InfoTip text="Actual minus forecast. Negative means less wind than forecast.">Error</InfoTip>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="text-ink">
@@ -390,7 +401,7 @@ function HourlyTable({ decision, hindsight }: { decision: DecisionResponse; hind
         </details>
       </Card>
       <div className="mt-8">
-        <ChevronLink to="/accuracy">See forecast accuracy across January</ChevronLink>
+        <ChevronLink to="/accuracy">January accuracy</ChevronLink>
       </div>
     </Chapter>
   )

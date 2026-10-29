@@ -133,4 +133,5 @@ export interface LegendItem {
   label: string
   color: string
   shape: 'line' | 'dashed' | 'area' | 'bar' | 'dot'
+  tip?: string
 }

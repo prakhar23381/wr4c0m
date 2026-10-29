@@ -25,7 +25,7 @@ export function CutoffPicker() {
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-control hidden items-center text-ink-2 md:inline-flex">
         Decide at
-        <InfoTip text="When you commit to the day-ahead purchase on the day before delivery. The app uses the latest wind forecast published at or before this time. Presets are the GB day-ahead auction gate closures; the EPEX time is approximate." />
+        <InfoTip text="The newest forecast published by this time, the day before, is used." />
       </span>
       <SegmentedControl
         label="Decision time on the day before"
