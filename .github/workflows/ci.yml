@@ -15,7 +15,7 @@ concurrency:
 jobs:
   backend:
     name: Backend (ruff, mypy, pytest)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -34,7 +34,7 @@ jobs:
 
   frontend:
     name: Frontend (oxlint, tsc, vitest, build)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
@@ -54,7 +54,7 @@ jobs:
   docker:
     name: Docker (compose build + smoke test)
     needs: [backend, frontend]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - run: docker compose up --build --detach --wait --wait-timeout 120
