@@ -43,7 +43,7 @@ export function DecisionPage() {
 
 function HeroSkeleton() {
   return (
-    <Chapter tone="dark">
+    <Chapter tone="hero">
       <Skeleton className="h-6 w-40" />
       <Skeleton className="mt-4 h-14 w-full max-w-[560px]" />
       <Skeleton className="mt-10 h-[420px]" />
@@ -139,7 +139,7 @@ function DecisionContent({
 }) {
   if (!decision.publish_time || !decision.summary) {
     return (
-      <Chapter tone="dark">
+      <Chapter tone="hero">
         <Heading
           level={1}
           eyebrow="Delivery day"
@@ -177,7 +177,7 @@ function Hero({
   const leads = decision.hours.map((h) => h.lead_time_h)
   const late = meta.late_publishes.includes(publish)
   return (
-    <Chapter tone="dark" inner="sm:pt-16">
+    <Chapter tone="hero" inner="sm:pt-16">
       <p className="text-eyebrow text-ink-2">Delivery day</p>
       <h1 className="text-display mt-2 text-ink">{formatDateLong(decision.delivery_date)}</h1>
       <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-3">

@@ -5,7 +5,7 @@ import { useTheme } from './theme'
 import { TONE_CLASS, useTone } from './tone'
 
 export interface ChartTheme {
-  /** True on dark backgrounds (dark mode or a black scene): washes need more opacity. */
+  /** True in dark mode: washes need more opacity on dark backgrounds. */
   dark: boolean
   surface: string
   ink: string
@@ -20,7 +20,7 @@ export interface ChartTheme {
 }
 
 /** Chart colours for the chapter the chart sits in, read from the CSS tokens so they follow
- *  light/dark mode and black scenes. */
+ *  the light/dark theme. */
 export function useChartTheme(): ChartTheme {
   const tone = useTone()
   const theme = useTheme()
@@ -33,7 +33,7 @@ export function useChartTheme(): ChartTheme {
     const styles = getComputedStyle(probe)
     const token = (name: string) => styles.getPropertyValue(`--${name}`).trim()
     const colours = {
-      dark: tone === 'dark' || dark,
+      dark,
       surface: token('card'),
       ink: token('ink'),
       ink2: token('ink-2'),

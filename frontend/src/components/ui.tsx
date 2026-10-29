@@ -8,7 +8,7 @@ import { TONE_CLASS, type Tone, ToneContext } from '../lib/tone'
 
 const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
-/** A full-bleed band of the page: black scene, pale grey field or white field. */
+/** A full-bleed band of the page: the hero, a pale grey field or a white field. */
 export function Chapter({
   tone,
   children,
@@ -32,7 +32,7 @@ export function Chapter({
 /** Sticky, translucent bar under the global nav holding the page title and its controls. */
 export function LocalNav({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="z-30 border-b border-line bg-localnav backdrop-blur-xl backdrop-saturate-150 sm:sticky sm:top-12">
+    <div className="z-30 border-b border-line bg-localnav backdrop-blur-xl backdrop-saturate-150 sm:sticky sm:top-16">
       <div className="relative mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
         <p className="text-title text-ink">{title}</p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">{children}</div>

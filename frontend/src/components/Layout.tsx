@@ -18,7 +18,7 @@ function ThemeToggle() {
       onClick={() => setTheme(next)}
       aria-label={`Switch to ${next} mode`}
       title={`Switch to ${next} mode`}
-      className="-mr-1.5 inline-flex size-8 items-center justify-center rounded-full text-ink-2 transition hover:bg-wash hover:text-ink active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-wash text-ink transition hover:brightness-95 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <svg viewBox="0 0 20 20" aria-hidden className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         {theme === 'dark' ? (
@@ -45,26 +45,26 @@ export function Layout() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-globalnav text-ink backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex h-12 max-w-[1080px] items-center justify-between gap-4 px-4 sm:px-6">
-          <NavLink to={`/${search}`} className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.016em] text-ink">
-            <img src="/favicon.svg" alt="" className="size-5" />
-            <span className="hidden min-[420px]:inline">Wind Forecast Monitor</span>
+        <div className="mx-auto flex h-16 max-w-[1080px] items-center justify-between gap-3 px-4 sm:px-6">
+          <NavLink to={`/${search}`} className="text-eyebrow flex shrink-0 items-center gap-2.5 text-ink">
+            <img src="/favicon.svg" alt="" className="size-7" />
+            <span className="hidden md:inline">Wind Forecast Monitor</span>
           </NavLink>
-          <div className="flex items-center gap-4 sm:gap-6">
-            <nav aria-label="Main" className="flex gap-5 sm:gap-7">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <nav aria-label="Main" className="flex gap-0.5 sm:gap-1">
               {PAGES.map((page) => (
                 <NavLink
                   key={page.to}
                   to={`${page.to}${search}`}
                   end
                   className={({ isActive }) =>
-                    `text-[13px] tracking-[-0.01em] whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${
-                      isActive ? 'font-medium text-ink' : 'text-ink-2 hover:text-ink'
+                    `rounded-full px-3 py-2 text-[15px] leading-none font-medium tracking-[-0.016em] whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:px-4 ${
+                      isActive ? 'bg-wash text-ink' : 'text-ink-2 hover:text-ink'
                     }`
                   }
                 >
-                  <span className="sm:hidden">{page.short}</span>
-                  <span className="hidden sm:inline">{page.label}</span>
+                  <span className="lg:hidden">{page.short}</span>
+                  <span className="hidden lg:inline">{page.label}</span>
                 </NavLink>
               ))}
             </nav>

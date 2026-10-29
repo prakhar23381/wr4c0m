@@ -31,12 +31,12 @@ export function MethodologyPage() {
 
   return (
     <>
-      <Chapter tone="dark" inner="sm:py-24">
+      <Chapter tone="hero" inner="sm:py-24">
         <p className="text-eyebrow text-ink-2">Methodology</p>
         <h1 className="text-display mt-2 text-ink">How the numbers are made.</h1>
       </Chapter>
 
-      <Chapter tone="white">
+      <Chapter tone="light">
         <Sheet
           title="The question"
           rows={[

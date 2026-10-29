@@ -32,7 +32,7 @@ export function AccuracyPage() {
         <CutoffPicker />
       </LocalNav>
 
-      <Chapter tone="dark" inner="sm:pt-16">
+      <Chapter tone="hero" inner="sm:pt-16">
         {summary.isPending ? (
           <>
             <Skeleton className="h-6 w-72" />
@@ -143,7 +143,7 @@ function SecondaryTiles({ summary }: { summary: AccuracySummary }) {
   )
 }
 
-/** A chart with its query's loading and error states; in a card, or bare on a black scene. */
+/** A chart with its query's loading and error states; in a card, or bare in the hero. */
 function ChartBlock<T>({
   query,
   title,
@@ -328,7 +328,7 @@ function CutoffSweep() {
   )
   const best = query.data?.rows.reduce((a, b) => (b.mae_mw < a.mae_mw ? b : a))
   return (
-    <Chapter tone="dark">
+    <Chapter tone="hero">
       <Heading
         title="The better forecast arrives too late."
         info={
