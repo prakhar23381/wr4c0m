@@ -7,6 +7,9 @@ import { Layout } from './components/Layout'
 import './index.css'
 import { DecisionPage } from './pages/DecisionPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { initTheme } from './lib/theme'
+
+initTheme()
 
 // The backend serves a fixed data snapshot, so cached responses never go stale.
 const queryClient = new QueryClient({
@@ -17,7 +20,7 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     // Shown while a lazily loaded page is fetched on a direct visit.
-    hydrateFallbackElement: <div className="min-h-dvh bg-black" />,
+    hydrateFallbackElement: <div className="min-h-dvh bg-page" />,
     children: [
       { path: '/', element: <DecisionPage /> },
       {

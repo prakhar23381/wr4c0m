@@ -1,6 +1,7 @@
-import { useMemo, useSyncExternalStore } from 'react'
+import { useMemo } from 'react'
 
 import { formatAxisMW } from './format'
+import { useTheme } from './theme'
 import { TONE_CLASS, useTone } from './tone'
 
 export interface ChartTheme {
@@ -18,28 +19,20 @@ export interface ChartTheme {
   shortfall: string
 }
 
-const DARK_QUERY = '(prefers-color-scheme: dark)'
-
-function subscribe(onChange: () => void) {
-  const query = window.matchMedia(DARK_QUERY)
-  query.addEventListener('change', onChange)
-  return () => query.removeEventListener('change', onChange)
-}
-
 /** Chart colours for the chapter the chart sits in, read from the CSS tokens so they follow
  *  light/dark mode and black scenes. */
 export function useChartTheme(): ChartTheme {
   const tone = useTone()
-  const dark = useSyncExternalStore(subscribe, () => window.matchMedia(DARK_QUERY).matches)
+  const theme = useTheme()
   return useMemo(() => {
-    void dark // re-read the tokens whenever the colour scheme flips
+    const dark = theme === 'dark'
     // Resolve the tokens as they apply inside this chapter, via a throwaway element.
     const probe = document.createElement('div')
     probe.className = TONE_CLASS[tone]
     document.body.appendChild(probe)
     const styles = getComputedStyle(probe)
     const token = (name: string) => styles.getPropertyValue(`--${name}`).trim()
-    const theme = {
+    const colours = {
       dark: tone === 'dark' || dark,
       surface: token('card'),
       ink: token('ink'),
@@ -53,8 +46,8 @@ export function useChartTheme(): ChartTheme {
       shortfall: token('shortfall'),
     }
     probe.remove()
-    return theme
-  }, [dark, tone])
+    return colours
+  }, [theme, tone])
 }
 
 /** Hex colour at an opacity, for washes such as the error band. */

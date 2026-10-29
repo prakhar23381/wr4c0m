@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Design language: Apple-style neutrals and type (see the UI lab notes in the project plan).
-   Pages are built from full-bleed "chapters": black scenes for the key message, pale grey and
+   Light or dark follows the system until the viewer picks one in the header. Pages are built from full-bleed "chapters": black scenes for the key message, pale grey and
    white fields for detail. Blue is reserved for actions, links and selection. Chart series keep
    the dataviz palette, validated for colour-blind separation in light and dark. */
 :root {
@@ -24,35 +24,36 @@
   --accent: #0071e3;
   --link: #0066cc;
   --localnav: rgba(255, 255, 255, 0.78);
+  --globalnav: rgba(250, 250, 252, 0.82);
   --forecast: #2a78d6;
   --actual: #eb6834;
   --shortfall: #e34948;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --page: #000000;
-    --chapter: #161617;
-    --card: #1d1d1f;
-    --card-on-chapter: #1d1d1f;
-    --card-on-page: #161617;
-    --popover: #2a2a2c;
-    --ink: #f5f5f7;
-    --ink-2: #a1a1a6;
-    --muted: #86868b;
-    --grid: #2c2c2e;
-    --axis: #424245;
-    --border: #424245;
-    --wash: #2c2c2e;
-    --thumb: #636366;
-    --switch-off: #39393d;
-    --link: #2997ff;
-    --localnav: rgba(22, 22, 23, 0.78);
-    --forecast: #3987e5;
-    --actual: #d95926;
-    --shortfall: #e66767;
-  }
+/* Set on <html> before first paint (index.html) and by the theme toggle (lib/theme.ts). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #000000;
+  --chapter: #161617;
+  --card: #1d1d1f;
+  --card-on-chapter: #1d1d1f;
+  --card-on-page: #161617;
+  --popover: #2a2a2c;
+  --ink: #f5f5f7;
+  --ink-2: #a1a1a6;
+  --muted: #86868b;
+  --grid: #2c2c2e;
+  --axis: #424245;
+  --border: #424245;
+  --wash: #2c2c2e;
+  --thumb: #636366;
+  --switch-off: #39393d;
+  --link: #2997ff;
+  --localnav: rgba(22, 22, 23, 0.78);
+  --globalnav: rgba(22, 22, 23, 0.82);
+  --forecast: #3987e5;
+  --actual: #d95926;
+  --shortfall: #e66767;
 }
 
 /* Chapters. A dark scene is black in both colour modes. */
@@ -102,6 +103,7 @@
   --color-accent: var(--accent);
   --color-link: var(--link);
   --color-localnav: var(--localnav);
+  --color-globalnav: var(--globalnav);
   --color-forecast: var(--forecast);
   --color-actual: var(--actual);
   --color-shortfall: var(--shortfall);
