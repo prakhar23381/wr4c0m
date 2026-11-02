@@ -6,6 +6,11 @@ A web app for a UK utility's day-ahead purchasing team. For any delivery day it 
 
 - **Live app:** https://wr4c0m.vercel.app
 - **API docs (interactive):** https://wr4c0m.vercel.app/api/docs
+- **Video walk-through:** [Part 1, client pitch](https://youtu.be/niVGP5hmXaQ) · [Part 2, tech lead review](https://youtu.be/4vVvM3nPZ8s)
+
+| Part 1: client pitch | Part 2: tech lead review |
+|---|---|
+| [![Part 1: client pitch (YouTube)](https://img.youtube.com/vi/niVGP5hmXaQ/hqdefault.jpg)](https://youtu.be/niVGP5hmXaQ) | [![Part 2: tech lead review (YouTube)](https://img.youtube.com/vi/4vVvM3nPZ8s/hqdefault.jpg)](https://youtu.be/4vVvM3nPZ8s) |
 
 | Decision view | Forecast accuracy |
 |---|---|
